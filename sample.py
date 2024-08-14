@@ -14,7 +14,7 @@ from tinystories import get_tokenizer_model_path
 
 # -----------------------------------------------------------------------------
 checkpoint = 'out/ckpt.pt'
-start = "" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
+start = "Long Long time ago" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 num_samples = 1 # number of samples to draw
 max_new_tokens = 100 # number of tokens generated in each sample
 temperature = 1.0 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
@@ -66,7 +66,7 @@ else:
 enc = Tokenizer(tokenizer_model=tokenizer_model)
 
 # encode the beginning of the prompt
-if start.startswith('FILE:'):
+if start.startswith('FILE'):
     with open(start[5:], 'r', encoding='utf-8') as f:
         start = f.read()
 start_ids = enc.encode(start, bos=True, eos=False)
