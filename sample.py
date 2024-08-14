@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Sample from the trained model with PyTorch
 """
@@ -19,7 +21,7 @@ temperature = 1.0 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, i
 top_k = 300 # retain only the top_k most likely tokens, clamp others to have 0 probability
 tokenizer = "" # override the tokenizer model path
 seed = 1337
-device = 'cuda' if torch.cuda.is_available() else 'cpu' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+device = 'cpu' if torch.cuda.is_available() else 'cpu' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 #dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 dtype = "float32"
 compile = False # use PyTorch 2.0 to compile the model to be faster
