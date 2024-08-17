@@ -4,7 +4,7 @@ CC = gcc
 CC = gcc-14
 
 1.sample:
-	OMP_NUM_THREADS=6 ./run ./work/stories15M.bin -t 0.8 -n 1256 -i "Here is a very funny joke she told"
+	OMP_NUM_THREADS=14 ./run ~/Desktop/models/llama2-7b.bin -t 0.8 -n 256 -i "Here is a very funny joke she told"
 
 #	OMP_NUM_THREADS=6 ./run ./work/stories110M.bin -t 0.8 -n 1256 -i "Here is a very funny joke she told"
 

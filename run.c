@@ -946,6 +946,21 @@ int main(int argc, char *argv[]) {
   build_transformer(&transformer, checkpoint_path);
   if (steps == 0 || steps > transformer.config.seq_len) steps = transformer.config.seq_len; // override to ~max length
 
+
+  {
+	Config* c = &transformer.config;
+	printf("dim = %d\n", c->dim);
+	printf("hidden_dim = %d\n", c->hidden_dim);
+	printf("n_layers = %d\n", c->n_layers);
+	printf("n_heads = %d\n", c->n_heads);
+	printf("n_kv_heads = %d\n", c->n_kv_heads);
+	printf("vocab_size = %d\n", c->vocab_size);
+	printf("seq_len = %d\n", c->seq_len);
+	printf("-------------------\n");
+	//exit(-1);
+  }
+
+
   // build the Tokenizer via the tokenizer .bin file
   Tokenizer tokenizer;
   build_tokenizer(&tokenizer, tokenizer_path, transformer.config.vocab_size);
