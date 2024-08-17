@@ -702,7 +702,6 @@ int main(int argc, char *argv[]) {
   build_transformer(&transformer, checkpoint_path);
   if (steps == 0 || steps > transformer.config.seq_len) steps = transformer.config.seq_len; // override to ~max length
 
-
   if(0){
 	Config* c = &transformer.config;
 	printf("dim = %d\n", c->dim);
