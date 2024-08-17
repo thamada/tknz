@@ -1,7 +1,7 @@
 # choose your compiler, e.g. gcc/clang
 # example override to clang: make run CC=clang
 CC = gcc-14
-CC = gcc
+CC = gcc -Wall
 
 SNAPSHOT=/mnt/hdd14tb/models/llama2.c/llama2-7b.bin
 SNAPSHOT=~/Desktop/models/llama2-7b.bin
