@@ -726,7 +726,6 @@ int main(int argc, char *argv[]) {
 
   // run!
   {
-    printf("generate!\n\n");
     fflush(stdout);
     generate(&transformer, &tokenizer, &sampler, prompt, steps);
   }

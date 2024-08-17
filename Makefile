@@ -8,7 +8,7 @@ SNAPSHOT=~/Desktop/models/llama2-7b.bin
 
 check.input.tokens:
 	$(CC) -Ofast -fopenmp -march=native calc_tokens.c  -lm  -o run
-	OMP_NUM_THREADS=14 ./run ~/Desktop/models/llama2-7b.bin -i "The total world population in the future will be"
+	./run ~/Desktop/models/tinyllamas/stories15M.bin -i "The total world population in the future will be"
 
 
 1.sample:
