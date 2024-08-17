@@ -613,7 +613,7 @@ void free_sampler(Sampler* sampler) {
 // ----------------------------------------------------------------------------
 // generation loop
 
-void generate(Transformer *transformer, Tokenizer *tokenizer, Sampler *sampler, char *prompt, int steps) {
+void generate(Tokenizer *tokenizer, char *prompt, int steps) {
   char *empty_prompt = "";
   if (prompt == NULL) { prompt = empty_prompt; }
 
@@ -702,36 +702,19 @@ int main(int argc, char *argv[]) {
   build_transformer(&transformer, checkpoint_path);
   if (steps == 0 || steps > transformer.config.seq_len) steps = transformer.config.seq_len; // override to ~max length
 
-  if(0){
-	Config* c = &transformer.config;
-	printf("dim = %d\n", c->dim);
-	printf("hidden_dim = %d\n", c->hidden_dim);
-	printf("n_layers = %d\n", c->n_layers);
-	printf("n_heads = %d\n", c->n_heads);
-	printf("n_kv_heads = %d\n", c->n_kv_heads);
-	printf("vocab_size = %d\n", c->vocab_size);
-	printf("seq_len = %d\n", c->seq_len);
-	printf("-------------------\n");
-	//exit(-1);
-  }
-
 
   // build the Tokenizer via the tokenizer .bin file
   Tokenizer tokenizer;
   build_tokenizer(&tokenizer, tokenizer_path, transformer.config.vocab_size);
 
-  // build the Sampler
-  Sampler sampler;
-  build_sampler(&sampler, transformer.config.vocab_size, temperature, topp, rng_seed);
-
   // run!
   {
     fflush(stdout);
-    generate(&transformer, &tokenizer, &sampler, prompt, steps);
+    //generate(&transformer, &tokenizer, &sampler, prompt, steps);
+    generate(&tokenizer, prompt, steps);
   }
 
   // memory and file handles cleanup
-  free_sampler(&sampler);
   free_tokenizer(&tokenizer);
   free_transformer(&transformer);
   return 0;
