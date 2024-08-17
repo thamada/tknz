@@ -4,6 +4,7 @@ CC = gcc-14
 CC = gcc
 
 SNAPSHOT=/mnt/hdd14tb/models/llama2.c/llama2-7b.bin
+SNAPSHOT=~/Desktop/models/llama2-7b.bin
 
 1.sample:
 	OMP_NUM_THREADS=14 ./run ${SNAPSHOT} -t 0.8 -n 32 -i "Here is a very funny joke she told"
