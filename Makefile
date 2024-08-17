@@ -1,6 +1,18 @@
 # choose your compiler, e.g. gcc/clang
 # example override to clang: make run CC=clang
 CC = gcc
+CC = gcc-14
+
+1.sample:
+	OMP_NUM_THREADS=6 ./run ./work/stories15M.bin -t 0.8 -n 1256 -i "Here is a very funny joke she told"
+
+#	OMP_NUM_THREADS=6 ./run ./work/stories110M.bin -t 0.8 -n 1256 -i "Here is a very funny joke she told"
+
+2.sample:
+	./run ./work/stories110M.bin -t 0.8 -n 4000 -i "The old man smiled."
+
+0.sample:
+	./sample.py --checkpoint=./work/stories15M.pt
 
 # the most basic way of building that is most likely to work on most systems
 .PHONY: run
