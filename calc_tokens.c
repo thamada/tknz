@@ -1,5 +1,7 @@
 /* Inference for Llama-2 Transformer model in pure C */
 
+#define VOCAB_SIZE 32000
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -252,49 +254,10 @@ void encode(Tokenizer* t, char *text, int8_t bos, int8_t eos, int *tokens, int *
   free(str_buffer);
 }
 
-// ----------------------------------------------------------------------------
-// The Sampler, which takes logits and returns a sampled token
-// sampling can be done in a few ways: greedy argmax, sampling, top-p sampling
-
-typedef struct {
-  float prob;
-  int index;
-} ProbIndex; // struct used when sorting probabilities during top-p sampling
-
-typedef struct {
-  int vocab_size;
-  ProbIndex* probindex; // buffer used in top-p sampling
-  float temperature;
-  float topp;
-  unsigned long long rng_state;
-} Sampler;
-
-
-int compare(const void* a, const void* b) {
-  ProbIndex* a_ = (ProbIndex*) a;
-  ProbIndex* b_ = (ProbIndex*) b;
-  if (a_->prob > b_->prob) return -1;
-  if (a_->prob < b_->prob) return 1;
-  return 0;
-}
-
-
-void build_sampler(Sampler* sampler, int vocab_size, float temperature, float topp, unsigned long long rng_seed) {
-  sampler->vocab_size = vocab_size;
-  sampler->temperature = temperature;
-  sampler->topp = topp;
-  sampler->rng_state = rng_seed;
-  // buffer only used with nucleus sampling; may not need but it's ~small
-  sampler->probindex = malloc(sampler->vocab_size * sizeof(ProbIndex));
-}
-
-void free_sampler(Sampler* sampler) {
-  free(sampler->probindex);
-}
 
 // ----------------------------------------------------------------------------
 // generation loop
-void generate(Tokenizer *tokenizer, char *prompt, int steps) {
+void generate(Tokenizer *tokenizer, char *prompt) {
   char *empty_prompt = "";
   if (prompt == NULL) { prompt = empty_prompt; }
 
@@ -333,8 +296,8 @@ void error_usage() {
   exit(EXIT_FAILURE);
 }
 
+/**
 int get_vocab_size(char* checkpoint) {
-
   printf("checkpoint_path: %s\n", checkpoint);
 
   FILE *file = fopen(checkpoint, "rb");
@@ -364,47 +327,29 @@ int get_vocab_size(char* checkpoint) {
 
   return _retval;
 }
-
+*/
 
 int main(int argc, char *argv[]) {
 
   // default parameters
-  char *checkpoint_path = NULL;  // e.g. out/model.bin
   char *tokenizer_path = "tokenizer.bin";
   float temperature = 1.0f;   // 0.0 = greedy deterministic. 1.0 = original. don't set higher
   float topp = 0.9f;          // top-p in nucleus sampling. 1.0 = off. 0.9 works well, but slower
-  int steps = 256;            // number of steps to run for
   char *prompt = NULL;        // prompt string
   unsigned long long rng_seed = 0; // seed rng with time by default
 
   // poor man's C argparse so we can override the defaults above from the command line
-  if (argc >= 2) { checkpoint_path = argv[1]; } else { error_usage(); }
-  for (int i = 2; i < argc; i+=2) {
-	// do some basic validation
-	if (i + 1 >= argc) { error_usage(); } // must have arg after flag
-	if (argv[i][0] != '-') { error_usage(); } // must start with dash
-	if (strlen(argv[i]) != 2) { error_usage(); } // must be -x (one dash, one letter)
-	// read in the args
-	if (argv[i][1] == 't') { temperature = atof(argv[i + 1]); }
-	else if (argv[i][1] == 'p') { topp = atof(argv[i + 1]); }
-	else if (argv[i][1] == 's') { rng_seed = atoi(argv[i + 1]); }
-	else if (argv[i][1] == 'n') { steps = atoi(argv[i + 1]); }
-	else if (argv[i][1] == 'i') { prompt = argv[i + 1]; }
-	else if (argv[i][1] == 'z') { tokenizer_path = argv[i + 1]; }
-
-	else { error_usage(); }
-  }
+  if (argc >= 1) { prompt = argv[1]; } else { error_usage(); }
 
   // parameter validation/overrides
   if (rng_seed <= 0) rng_seed = (unsigned int)time(NULL);
   if (temperature < 0.0) temperature = 0.0;
   if (topp < 0.0 || 1.0 < topp) topp = 0.9;
-  if (steps < 0) steps = 0;
 
   // build the Tokenizer via the tokenizer .bin file
   Tokenizer tokenizer;
   {
-    int vocab_size = get_vocab_size(checkpoint_path);
+    int vocab_size = VOCAB_SIZE; //get_vocab_size(checkpoint_path);
 
     //build_tokenizer(&tokenizer, tokenizer_path, transformer.config.vocab_size);
     build_tokenizer(&tokenizer, tokenizer_path, vocab_size);
@@ -413,8 +358,7 @@ int main(int argc, char *argv[]) {
   // run!
   {
     fflush(stdout);
-    //generate(&transformer, &tokenizer, &sampler, prompt, steps);
-    generate(&tokenizer, prompt, steps);
+    generate(&tokenizer, prompt);
   }
 
   // memory and file handles cleanup
