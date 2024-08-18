@@ -328,17 +328,8 @@ void generate(Tokenizer *tokenizer, char *prompt, int steps) {
 #ifndef TESTING
 
 void error_usage() {
-  fprintf(stderr, "Usage:   run <checkpoint> [options]\n");
-  fprintf(stderr, "Example: run model.bin -n 256 -i \"Once upon a time\"\n");
-  fprintf(stderr, "Options:\n");
-  fprintf(stderr, "  -t <float>  temperature in [0,inf], default 1.0\n");
-  fprintf(stderr, "  -p <float>  p value in top-p (nucleus) sampling in [0,1] default 0.9\n");
-  fprintf(stderr, "  -s <int>    random seed, default time(NULL)\n");
-  fprintf(stderr, "  -n <int>    number of steps to run for, default 256. 0 = max_seq_len\n");
-  fprintf(stderr, "  -i <string> input prompt\n");
-  fprintf(stderr, "  -z <string> optional path to custom tokenizer\n");
-  fprintf(stderr, "  -m <string> mode: generate|chat, default: generate\n");
-  fprintf(stderr, "  -y <string> (optional) system prompt in chat mode\n");
+  fprintf(stderr, "Usage:   run \"<input tokens>\"\n");
+  fprintf(stderr, "Example: run -i \"Once upon a time\"\n");
   exit(EXIT_FAILURE);
 }
 
@@ -350,29 +341,26 @@ int get_vocab_size(char* checkpoint) {
   if (!file) { fprintf(stderr, "Couldn't open file %s\n", checkpoint); exit(EXIT_FAILURE); }
 
   // read in the config header
-  Config cfg;
-  Config* config = &cfg;
+  Config config;
 
-  if (fread(config, sizeof(Config), 1, file) != 1) { exit(EXIT_FAILURE); }
+  if (fread(&config, sizeof(Config), 1, file) != 1) { exit(EXIT_FAILURE); }
   // negative vocab size is hacky way of signaling unshared weights. bit yikes.
-  config->vocab_size = abs(config->vocab_size);
+  config.vocab_size = abs(config.vocab_size);
 
   {
-	Config* c = config;
-	printf("dim = %d\n", c->dim);
-	printf("hidden_dim = %d\n", c->hidden_dim);
-	printf("n_layers = %d\n", c->n_layers);
-	printf("n_heads = %d\n", c->n_heads);
-	printf("n_kv_heads = %d\n", c->n_kv_heads);
-	printf("vocab_size = %d\n", c->vocab_size);
-	printf("seq_len = %d\n", c->seq_len);
-	printf("-------------------\n");
-	//exit(-1);
+    printf("dim = %d\n", config.dim);
+    printf("hidden_dim = %d\n", config.hidden_dim);
+    printf("n_layers = %d\n", config.n_layers);
+    printf("n_heads = %d\n", config.n_heads);
+    printf("n_kv_heads = %d\n", config.n_kv_heads);
+    printf("vocab_size = %d\n", config.vocab_size);
+    printf("seq_len = %d\n", config.seq_len);
+    printf("-------------------\n");
   }
 
   fclose(file);
 
-  int _retval = config->vocab_size;
+  int _retval = config.vocab_size;
 
   return _retval;
 }
