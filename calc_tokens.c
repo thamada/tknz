@@ -49,6 +49,14 @@ int compare_tokens(const void *a, const void *b) {
   return strcmp(((TokenIndex*)a)->str, ((TokenIndex*)b)->str);
 }
 
+void dump_tokenizer(Tokenizer* t, int vocab_size) {
+  int n = t->vocab_size;
+  for (int i=0; i < n; i++) {
+    char* str = t->vocab[i];
+    printf("%d: %s\n", i, str);
+  }
+}
+
 void build_tokenizer(Tokenizer* t, char* tokenizer_path, int vocab_size) {
   // i should have written the vocab_size into the tokenizer file... sigh
   t->vocab_size = vocab_size;
@@ -292,76 +300,21 @@ void generate(Tokenizer *tokenizer, char *prompt) {
 
 void error_usage() {
   fprintf(stderr, "Usage:   run \"<input tokens>\"\n");
-  fprintf(stderr, "Example: run -i \"Once upon a time\"\n");
+  fprintf(stderr, "Example: run \"Once upon a time\"\n");
   exit(EXIT_FAILURE);
 }
 
-/**
-int get_vocab_size(char* checkpoint) {
-  printf("checkpoint_path: %s\n", checkpoint);
-
-  FILE *file = fopen(checkpoint, "rb");
-  if (!file) { fprintf(stderr, "Couldn't open file %s\n", checkpoint); exit(EXIT_FAILURE); }
-
-  // read in the config header
-  Config config;
-
-  if (fread(&config, sizeof(Config), 1, file) != 1) { exit(EXIT_FAILURE); }
-  // negative vocab size is hacky way of signaling unshared weights. bit yikes.
-  config.vocab_size = abs(config.vocab_size);
-
-  {
-    printf("dim = %d\n", config.dim);
-    printf("hidden_dim = %d\n", config.hidden_dim);
-    printf("n_layers = %d\n", config.n_layers);
-    printf("n_heads = %d\n", config.n_heads);
-    printf("n_kv_heads = %d\n", config.n_kv_heads);
-    printf("vocab_size = %d\n", config.vocab_size);
-    printf("seq_len = %d\n", config.seq_len);
-    printf("-------------------\n");
-  }
-
-  fclose(file);
-
-  int _retval = config.vocab_size;
-
-  return _retval;
-}
-*/
-
 int main(int argc, char *argv[]) {
-
-  // default parameters
   char *tokenizer_path = "tokenizer.bin";
-  float temperature = 1.0f;   // 0.0 = greedy deterministic. 1.0 = original. don't set higher
-  float topp = 0.9f;          // top-p in nucleus sampling. 1.0 = off. 0.9 works well, but slower
-  char *prompt = NULL;        // prompt string
-  unsigned long long rng_seed = 0; // seed rng with time by default
-
-  // poor man's C argparse so we can override the defaults above from the command line
-  if (argc >= 1) { prompt = argv[1]; } else { error_usage(); }
-
-  // parameter validation/overrides
-  if (rng_seed <= 0) rng_seed = (unsigned int)time(NULL);
-  if (temperature < 0.0) temperature = 0.0;
-  if (topp < 0.0 || 1.0 < topp) topp = 0.9;
-
-  // build the Tokenizer via the tokenizer .bin file
+  char *prompt = NULL;
+  if (argc >= 2) { prompt = argv[1]; } else { error_usage(); }
   Tokenizer tokenizer;
-  {
-    int vocab_size = VOCAB_SIZE; //get_vocab_size(checkpoint_path);
+  build_tokenizer(&tokenizer, tokenizer_path, VOCAB_SIZE);
 
-    //build_tokenizer(&tokenizer, tokenizer_path, transformer.config.vocab_size);
-    build_tokenizer(&tokenizer, tokenizer_path, vocab_size);
-  }
+  if (0) dump_tokenizer(&tokenizer, VOCAB_SIZE);
 
-  // run!
-  {
-    fflush(stdout);
-    generate(&tokenizer, prompt);
-  }
-
-  // memory and file handles cleanup
+  fflush(stdout);
+  generate(&tokenizer, prompt);
   free_tokenizer(&tokenizer);
   return 0;
 }
