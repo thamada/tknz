@@ -93,6 +93,23 @@ char* decode(Tokenizer* t, int prev_token, int token) {
   return piece;
 }
 
+char* safe_piece(char *piece) {
+  // piece might be a raw byte token, and we only want to print printable chars or whitespace
+  // because some of the other bytes can be various control codes, backspace, etc.
+  char* safe_empty = ""; 
+  if (piece == NULL) { return safe_empty; }
+  if (piece[0] == '\0') { return safe_empty; }
+  if (piece[1] == '\0') {
+    unsigned char byte_val = piece[0];
+    if (!(isprint(byte_val) || isspace(byte_val))) {
+      return safe_empty; // bad byte, don't print it
+    }
+  }
+
+  return piece;
+}
+
+
 void safe_printf(char *piece) {
   // piece might be a raw byte token, and we only want to print printable chars or whitespace
   // because some of the other bytes can be various control codes, backspace, etc.
@@ -297,7 +314,7 @@ void generate(Tokenizer *tokenizer, char *prompt, int steps) {
   for (int i=0; i<num_prompt_tokens; i++) {
     int token = prompt_tokens[0];
     char* piece = decode(tokenizer, token, prompt_tokens[i]);
-    printf ("[% 3d]:% 6d = '%s'\n", i, prompt_tokens[i], piece);
+    printf ("[% 3d]:% 6d = '%s'\n", i, prompt_tokens[i], safe_piece(piece));
   }
 
   printf("\n");
