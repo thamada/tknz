@@ -7,8 +7,9 @@ SNAPSHOT=/mnt/hdd14tb/models/llama2.c/llama2-7b.bin
 SNAPSHOT=~/Desktop/models/llama2-7b.bin
 
 check.input.tokens:
-	$(CC) -Ofast -fopenmp -march=native calc_tokens.c  -lm  -o run
-	./run ~/Desktop/models/tinyllamas/stories15M.bin -i "The total world population in the future will be"
+	$(CC) calc_tokens.c -o run -lm
+	./run "Humpty Dumpty sat on a wall, Humpty Dumpty had a great fall. All the king's horses and all the king's men Couldn't put Humpty together again."
+
 
 
 1.sample:
