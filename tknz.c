@@ -1,6 +1,5 @@
-/* Inference for Llama-2 Transformer model in pure C */
-
-#define VOCAB_SIZE 32000
+/* Tokenizer in pure C */
+// The Byte Pair Encoding (BPE) Tokenizer that translates strings <-> tokens
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,27 +8,10 @@
 #include <math.h>
 #include <string.h>
 #include <fcntl.h>
-#if defined _WIN32
-  #include "win.h"
-#else
-  #include <unistd.h>
-  #include <sys/mman.h>
-#endif
-// ----------------------------------------------------------------------------
-// Transformer model
+#include <unistd.h>
+#include <sys/mman.h>
 
-typedef struct {
-  int dim; // transformer dimension
-  int hidden_dim; // for ffn layers
-  int n_layers; // number of layers
-  int n_heads; // number of query heads
-  int n_kv_heads; // number of key/value heads (can be < query heads because of multiquery)
-  int vocab_size; // vocabulary size, usually 256 (byte-level)
-  int seq_len; // max sequence length
-} Config;
-
-// ----------------------------------------------------------------------------
-// The Byte Pair Encoding (BPE) Tokenizer that translates strings <-> tokens
+#define VOCAB_SIZE 32000
 
 typedef struct {
   char *str;
@@ -115,10 +97,8 @@ char* safe_piece(char *piece) {
       return safe_empty; // bad byte, don't print it
     }
   }
-
   return piece;
 }
-
 
 void safe_printf(char *piece) {
   // piece might be a raw byte token, and we only want to print printable chars or whitespace
@@ -262,9 +242,6 @@ void encode(Tokenizer* t, char *text, int8_t bos, int8_t eos, int *tokens, int *
   free(str_buffer);
 }
 
-
-// ----------------------------------------------------------------------------
-// generation loop
 void generate(Tokenizer *tokenizer, char *prompt) {
   char *empty_prompt = "";
   if (prompt == NULL) { prompt = empty_prompt; }
@@ -280,17 +257,14 @@ void generate(Tokenizer *tokenizer, char *prompt) {
 	exit(EXIT_FAILURE);
   }
 
-  printf("input tokens = %d\n", num_prompt_tokens);
-
-  for (int i=0; i<num_prompt_tokens; i++) {
+  for (int i=1; i<num_prompt_tokens; i++) {
     int token = prompt_tokens[0];
     char* piece = decode(tokenizer, token, prompt_tokens[i]);
     printf ("[% 3d]:% 6d = '%s'\n", i, prompt_tokens[i], safe_piece(piece));
   }
 
-  printf("\n");
+  printf("%d tokens.\n", num_prompt_tokens-1);
   fflush(stdout);
-
   free(prompt_tokens);
 }
 
