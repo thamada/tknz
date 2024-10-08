@@ -72,7 +72,7 @@ void free_tokenizer(Tokenizer* t) {
   free(t->sorted_vocab);
 }
 
-char* decode(Tokenizer* t, int prev_token, int token) {
+char* decode_simple(Tokenizer* t, int prev_token, int token) {
   char *piece = t->vocab[token];
   // following BOS (1) token, sentencepiece decoder strips any leading whitespace (see PR #89)
   if (prev_token == 1 && piece[0] == ' ') { piece++; }
@@ -83,6 +83,53 @@ char* decode(Tokenizer* t, int prev_token, int token) {
 	piece = (char*)t->byte_pieces + byte_val * 2;
   }
   return piece;
+}
+
+char *decode(Tokenizer *t, int prev_token, int token) {
+    // 通常の語彙からトークンを取得
+    char *piece = t->vocab[token];
+
+    // バイトトークンの場合の処理
+    unsigned char byte_val;
+    static char utf8_buffer[5]; // 最大4バイトのUTF-8コードポイント + 終端文字
+    static int utf8_index = 0;  // 現在のバッファ内の位置
+
+    // フォールバックトークンの場合
+    if (token >= 3 && token <= 258) { // フォールバックで生成されたバイトトークンを判定
+        byte_val = (unsigned char)(token - 3); // トークンIDから元のバイト値を復元
+
+        // バッファにバイトを追加
+        utf8_buffer[utf8_index++] = byte_val;
+
+        // 完全なUTF-8コードポイントが揃ったかどうかの判定
+        if ((utf8_buffer[0] & 0x80) == 0) {
+            // 1バイトASCII文字 (0xxxxxxx) - すでにこれで一文字が完成
+            utf8_buffer[utf8_index] = '\0'; // 終端を追加
+            utf8_index = 0; // 次の文字に備えてリセット
+            return utf8_buffer;
+        } else if ((utf8_buffer[0] & 0xE0) == 0xC0 && utf8_index == 2) {
+            // 2バイトUTF-8文字 (110xxxxx 10xxxxxx)
+            utf8_buffer[utf8_index] = '\0'; // 終端を追加
+            utf8_index = 0; // 次の文字に備えてリセット
+            return utf8_buffer;
+        } else if ((utf8_buffer[0] & 0xF0) == 0xE0 && utf8_index == 3) {
+            // 3バイトUTF-8文字 (1110xxxx 10xxxxxx 10xxxxxx)
+            utf8_buffer[utf8_index] = '\0'; // 終端を追加
+            utf8_index = 0; // 次の文字に備えてリセット
+            return utf8_buffer;
+        } else if ((utf8_buffer[0] & 0xF8) == 0xF0 && utf8_index == 4) {
+            // 4バイトUTF-8文字 (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
+            utf8_buffer[utf8_index] = '\0'; // 終端を追加
+            utf8_index = 0; // 次の文字に備えてリセット
+            return utf8_buffer;
+        } else {
+            // まだ完全なUTF-8コードポイントに達していないので何も返さない
+            return NULL;
+        }
+    }
+
+    // それ以外の場合（通常のトークン）
+    return piece;
 }
 
 char* safe_piece(char *piece) {
